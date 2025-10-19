@@ -26,7 +26,7 @@ export default function TopBar({ className = "" }: { className?: string }) {
   return (
     <div
       className={clsx(
-        "absolute inset-x-0 top-16 z-50 flex w-full items-center justify-center py-4 px-8",
+        "absolute inset-x-0 top-16 z-50 flex w-full items-center justify-center px-8 py-4",
         className,
       )}
     >
@@ -34,7 +34,7 @@ export default function TopBar({ className = "" }: { className?: string }) {
         <img
           src="/logo.png"
           alt="Environmental Crisis Tracker Logo"
-          className="h-12 w-12 rounded-lg shadow-lg border border-white/20 hover:scale-105 transition-transform duration-200"
+          className="h-12 w-12 rounded-lg border border-white/20 shadow-lg transition-transform duration-200 hover:scale-105"
         />
         {links.map(({ label, href, icon }) => (
           <Link
