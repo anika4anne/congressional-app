@@ -1,10 +1,6 @@
 import { z } from "zod";
 
-import {
-  createTRPCRouter,
-  protectedProcedure,
-  publicProcedure,
-} from "~/server/api/trpc";
+import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 let post = {
   id: 1,
@@ -20,18 +16,18 @@ export const postRouter = createTRPCRouter({
       };
     }),
 
-  create: protectedProcedure
+  create: publicProcedure
     .input(z.object({ name: z.string().min(1) }))
     .mutation(async ({ input }) => {
       post = { id: post.id + 1, name: input.name };
       return post;
     }),
 
-  getLatest: protectedProcedure.query(() => {
+  getLatest: publicProcedure.query(() => {
     return post;
   }),
 
-  getSecretMessage: protectedProcedure.query(() => {
+  getSecretMessage: publicProcedure.query(() => {
     return "you can now see this secret message!";
   }),
 });
