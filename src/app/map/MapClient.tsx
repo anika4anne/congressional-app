@@ -41,83 +41,133 @@ export default function MapClient() {
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || hazards.length === 0 || !map.isStyleLoaded()) return;
+    if (!map || hazards.length === 0) return;
 
-    const points = hazards.map((hazard, i) => {
-      const lng = ((i * 53.7) % 360) - 180;
-      const lat = ((i * 17.3) % 140) - 70;
-      return {
-        type: "Feature",
-        properties: {
-          title: hazard.short_name || hazard.name || `Hazard ${i + 1}`,
-          description: hazard.description || "",
-        },
-        geometry: {
-          type: "Point",
-          coordinates: [lng, lat],
-        },
-      };
-    });
+    const addHazardsToMap = () => {
+      if (!map.isStyleLoaded()) {
+        map.on("styledata", addHazardsToMap);
+        return;
+      }
 
-    if (map.getSource("hazards")) {
-      map.getSource("hazards").setData({
-        type: "FeatureCollection",
-        features: points,
+      const points = hazards.map((hazard, i) => {
+        const lng = ((i * 53.7) % 360) - 180;
+        const lat = ((i * 17.3) % 140) - 70;
+        return {
+          type: "Feature",
+          properties: {
+            title: hazard.short_name || hazard.name || `Hazard ${i + 1}`,
+            description: hazard.description || "",
+          },
+          geometry: {
+            type: "Point",
+            coordinates: [lng, lat],
+          },
+        };
       });
-    } else {
-      map.addSource("hazards", {
-        type: "geojson",
-        data: {
+
+      if (map.getSource("hazards")) {
+        map.getSource("hazards").setData({
           type: "FeatureCollection",
           features: points,
-        },
-      });
+        });
+      } else {
+        map.addSource("hazards", {
+          type: "geojson",
+          data: {
+            type: "FeatureCollection",
+            features: points,
+          },
+        });
 
-      map.addLayer({
-        id: "hazards-layer",
-        type: "circle",
-        source: "hazards",
-        paint: {
-          "circle-radius": 6,
-          "circle-color": "#ff4444",
-          "circle-stroke-width": 2,
-          "circle-stroke-color": "#fff",
-        },
-      });
+        map.addLayer({
+          id: "hazards-layer",
+          type: "circle",
+          source: "hazards",
+          paint: {
+            "circle-radius": 6,
+            "circle-color": "#ff4444",
+            "circle-stroke-width": 2,
+            "circle-stroke-color": "#fff",
+          },
+        });
 
-      const popup = new maplibregl.Popup();
+        const popup = new maplibregl.Popup();
 
-      map.on("mousemove", "hazards-layer", (e) => {
-        const feature = e.features[0];
-        if (feature) {
-          popup
-            .setLngLat(e.lngLat)
-            .setHTML(`<strong>${feature.properties.title}</strong>`)
-            .addTo(map);
-        }
-      });
+        map.on("mousemove", "hazards-layer", (e) => {
+          const feature = e.features[0];
+          if (feature) {
+            popup
+              .setLngLat(e.lngLat)
+              .setHTML(
+                `
+                <div style="
+                  background: linear-gradient(135deg, #1f2937, #374151);
+                  color: white;
+                  padding: 8px 12px;
+                  border-radius: 8px;
+                  font-weight: 600;
+                  font-size: 14px;
+                  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                  border: 1px solid rgba(255,255,255,0.2);
+                ">
+                  ${feature.properties.title}
+                </div>
+              `,
+              )
+              .addTo(map);
+          }
+        });
 
-      map.on("mouseleave", "hazards-layer", () => {
-        popup.remove();
-      });
+        map.on("mouseleave", "hazards-layer", () => {
+          popup.remove();
+        });
 
-      map.on("click", "hazards-layer", (e) => {
-        const feature = e.features[0];
-        if (feature) {
-          new maplibregl.Popup()
-            .setLngLat(e.lngLat)
-            .setHTML(
-              `
-              <div style="min-width: 200px;">
-                <h3>${feature.properties.title}</h3>
-                <p>${feature.properties.description}</p>
-              </div>
-            `,
-            )
-            .addTo(map);
-        }
-      });
-    }
+        map.on("click", "hazards-layer", (e) => {
+          const feature = e.features[0];
+          if (feature) {
+            new maplibregl.Popup()
+              .setLngLat(e.lngLat)
+              .setHTML(
+                `
+                <div style="
+                  background: linear-gradient(135deg, #1f2937, #374151);
+                  color: white;
+                  padding: 16px;
+                  border-radius: 12px;
+                  min-width: 280px;
+                  max-width: 320px;
+                  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+                  border: 1px solid rgba(255,255,255,0.2);
+                  font-family: system-ui, -apple-system, sans-serif;
+                ">
+                  <h3 style="
+                    margin: 0 0 12px 0;
+                    font-size: 18px;
+                    font-weight: 700;
+                    color: #fbbf24;
+                    border-bottom: 2px solid #fbbf24;
+                    padding-bottom: 8px;
+                  ">
+                    ${feature.properties.title}
+                  </h3>
+                  <p style="
+                    margin: 0;
+                    font-size: 14px;
+                    line-height: 1.5;
+                    color: #e5e7eb;
+                  ">
+                    ${feature.properties.description}
+                  </p>
+                </div>
+              `,
+              )
+              .addTo(map);
+          }
+        });
+      }
+    };
+
+    addHazardsToMap();
   }, [hazards]);
 
   const toggleFullscreen = () => {
