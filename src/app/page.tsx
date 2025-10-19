@@ -16,11 +16,6 @@ export default function Home() {
       <main className="flex min-h-screen items-center justify-center">
         <div className="mx-auto max-w-4xl px-4 text-center">
           <div className="mb-8 flex flex-col items-center space-y-6">
-            <img
-              src="/logo.png"
-              alt="Environmental Crisis Tracker Logo"
-              className="h-28 w-28"
-            />
             <div className="space-y-4">
               <h1 className="text-6xl font-extrabold tracking-tight text-white sm:text-7xl md:text-8xl">
                 Environmental

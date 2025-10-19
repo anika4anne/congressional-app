@@ -26,13 +26,16 @@ export default function TopBar({ className = "" }: { className?: string }) {
   return (
     <div
       className={clsx(
-        "absolute inset-x-0 top-16 z-50 flex w-full items-center justify-between py-4 pr-8 pl-2",
+        "absolute inset-x-0 top-16 z-50 flex w-full items-center justify-center py-4 px-8",
         className,
       )}
     >
-      <div className="w-0"></div>
-
-      <nav className="absolute left-1/2 flex -translate-x-1/2 transform items-center gap-2 rounded-full border border-white/10 bg-black/30 px-6 py-3 shadow-lg backdrop-blur-md">
+      <nav className="flex items-center gap-4 rounded-full border border-white/10 bg-black/30 px-6 py-3 shadow-lg backdrop-blur-md">
+        <img
+          src="/logo.png"
+          alt="Environmental Crisis Tracker Logo"
+          className="h-12 w-12 rounded-lg shadow-lg border border-white/20 hover:scale-105 transition-transform duration-200"
+        />
         {links.map(({ label, href, icon }) => (
           <Link
             key={href}
@@ -47,8 +50,6 @@ export default function TopBar({ className = "" }: { className?: string }) {
           </Link>
         ))}
       </nav>
-
-      <div className="w-0"></div>
     </div>
   );
 }
