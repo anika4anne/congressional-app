@@ -30,10 +30,12 @@ export default function MapPage() {
       <TopBar className="top-8" />
 
       <main className="min-h-screen pt-24">
-        <div className="container mx-auto px-4 py-8">
-          <div className="mb-12 text-center"></div>
+        <div className="container mx-auto h-full w-full max-w-7xl px-4 py-8">
+          <div className="mb-8 text-center"></div>
 
-          <MapClient />
+          <div className="h-full w-full overflow-hidden">
+            <MapClient />
+          </div>
         </div>
       </main>
 
