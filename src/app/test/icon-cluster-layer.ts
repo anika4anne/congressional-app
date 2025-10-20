@@ -32,13 +32,20 @@ function getIconSize(size: number): number {
 }
 
 export default class IconClusterLayer<
-  DataT extends { [key: string]: any } = any,
-  ExtraProps extends {} = {},
+  DataT extends Record<string, unknown> = Record<string, unknown>,
+  ExtraProps extends Record<string, unknown> = Record<string, unknown>,
 > extends CompositeLayer<Required<IconLayerProps<DataT>> & ExtraProps> {
-  state!: {
+  state: {
     data: (PointFeature<DataT> | ClusterFeature<DataT>)[];
     index: Supercluster<DataT, DataT>;
     z: number;
+  } = {
+    data: [],
+    index: new Supercluster<DataT, DataT>({
+      maxZoom: 16,
+      radius: 0,
+    }),
+    z: 0,
   };
 
   shouldUpdateState({ changeFlags }: UpdateParameters<this>) {
@@ -57,7 +64,11 @@ export default class IconClusterLayer<
       index.load(
         // @ts-expect-error Supercluster expects proper GeoJSON feature
         (props.data as DataT[]).map((d) => ({
-          geometry: { coordinates: (props.getPosition as Function)(d) },
+          geometry: {
+            coordinates: (props.getPosition as (d: DataT) => [number, number])(
+              d,
+            ),
+          },
           properties: d,
         })),
       );
@@ -85,7 +96,7 @@ export default class IconClusterLayer<
       let objects: DataT[] | undefined;
       if (pickedObject.cluster && mode !== "hover") {
         objects = this.state.index
-          .getLeaves(pickedObject.cluster_id, 25)
+          .getLeaves(pickedObject.cluster_id as number, 25)
           .map((f) => f.properties);
       }
       return { ...info, object: pickedObject, objects };
@@ -105,13 +116,21 @@ export default class IconClusterLayer<
         sizeScale,
         getPosition: (d) => d.geometry.coordinates as [number, number],
         getIcon: (d) =>
-          getIconName(d.properties.cluster ? d.properties.point_count : 1),
+          getIconName(
+            d.properties.cluster ? (d.properties.point_count as number) : 1,
+          ),
         getSize: (d) =>
-          getIconSize(d.properties.cluster ? d.properties.point_count : 1),
+          getIconSize(
+            d.properties.cluster ? (d.properties.point_count as number) : 1,
+          ),
       },
       this.getSubLayerProps({
         id: "icon",
-      }),
+      }) as Partial<
+        Required<
+          IconLayerProps<PointFeature<DataT> | ClusterFeature<DataT>>
+        > & { id: string }
+      >,
     );
   }
 }

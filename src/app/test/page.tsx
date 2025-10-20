@@ -12,10 +12,6 @@ import type { IconClusterLayerPickingInfo } from "./icon-cluster-layer";
 import type { PickingInfo, MapViewState } from "@deck.gl/core";
 import type { IconLayerProps } from "@deck.gl/layers";
 
-// Source data CSV
-const DATA_URL =
-  "https://raw.githubusercontent.com/visgl/deck.gl-data/master/examples/icon/meteorites.json"; // eslint-disable-line
-
 const MAP_VIEW = new MapView({ repeat: true });
 const INITIAL_VIEW_STATE: MapViewState = {
   longitude: -35,
@@ -29,27 +25,25 @@ const INITIAL_VIEW_STATE: MapViewState = {
 const MAP_STYLE =
   "https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json";
 
-type Meterite = {
+type CrisisData = {
   coordinates: [longitude: number, latitude: number];
   name: string;
-  class: string;
-  mass: number;
-  year: number;
+  type: "cyclone" | "flood" | "volcano" | "earthquake" | "wildfire";
+  description: string;
 };
 
-function renderTooltip(info: IconClusterLayerPickingInfo<Meterite>) {
+function renderTooltip(info: IconClusterLayerPickingInfo<CrisisData>) {
   const { object, objects, x, y } = info;
 
   if (objects) {
     return (
       <div className="tooltip interactive" style={{ left: x, top: y }}>
-        {objects.map(({ name, year, mass, class: meteorClass }) => {
+        {objects.map(({ name, type, description }) => {
           return (
             <div key={name}>
               <h5>{name}</h5>
-              <div>Year: {year || "unknown"}</div>
-              <div>Class: {meteorClass}</div>
-              <div>Mass: {mass}g</div>
+              <div>Type: {type}</div>
+              <div>Description: {description}</div>
             </div>
           );
         })}
@@ -67,68 +61,44 @@ function renderTooltip(info: IconClusterLayerPickingInfo<Meterite>) {
     </div>
   ) : (
     <div className="tooltip" style={{ left: x, top: y }}>
-      {object.name} {object.year ? `(${object.year})` : ""}
+      {object.name} {object.type ? `(${object.type})` : ""}
     </div>
   );
 }
 
 /* eslint-disable react/no-deprecated */
 export default function App({
-  data = DATA_URL,
   iconMapping = "data/location-icon-mapping.json",
   iconAtlas = "data/location-icon-atlas.png",
-  showCluster = true,
+  // showCluster = false,
   mapStyle = MAP_STYLE,
 }) {
-  const [hoverInfo, setHoverInfo] =
-    useState<IconClusterLayerPickingInfo<Meterite> | null>(null);
-
-  const hideTooltip = useCallback(() => {
-    setHoverInfo(null);
-  }, []);
-  const expandTooltip = useCallback((info: PickingInfo) => {
-    if (info.picked && showCluster) {
-      setHoverInfo(info);
-    } else {
-      setHoverInfo(null);
-    }
-  }, []);
-
-  const layerProps: IconLayerProps<Meterite> = {
-    id: "icon",
-    data,
-    pickable: true,
-    getPosition: (d) => d.coordinates,
-    iconAtlas,
-    iconMapping,
-  };
-
-  if (hoverInfo === null || !hoverInfo.objects) {
-    layerProps.onHover = setHoverInfo;
-  }
-
-  const layer = showCluster
-    ? new IconClusterLayer({ ...layerProps, id: "icon-cluster", sizeScale: 40 })
-    : new IconLayer({
-        ...layerProps,
-        id: "icon",
-        getIcon: (d) => "marker",
-        sizeUnits: "meters",
-        sizeScale: 2000,
-        sizeMinPixels: 6,
-      });
+  const layer = // showCluster
+    // ? new IconClusterLayer({ ...layerProps, id: "icon-cluster", sizeScale: 40 })
+    // :
+    new IconLayer({
+      id: "icon",
+      data: "/api/test",
+      pickable: true,
+      getPosition: (d: CrisisData) => d.coordinates,
+      iconAtlas,
+      iconMapping,
+      sizeBasis: "width",
+      getIcon: (_d: CrisisData) => "marker",
+      sizeUnits: "meters",
+      sizeScale: 10000,
+      sizeMinPixels: 100,
+    });
   return (
     <DeckGL
       layers={[layer]}
       views={MAP_VIEW}
       initialViewState={INITIAL_VIEW_STATE}
       controller={{ dragRotate: false }}
-      onViewStateChange={hideTooltip}
-      onClick={expandTooltip}
+      onClick={({ object }: PickingInfo<CrisisData>) => console.log(object)}
+      getTooltip={({ object }: PickingInfo<CrisisData>) => object?.name ?? ""}
     >
       <Map reuseMaps mapStyle={mapStyle} />
-
-      {hoverInfo && renderTooltip(hoverInfo)}
     </DeckGL>
   );
 }
