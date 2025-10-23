@@ -2,9 +2,65 @@
 
 import { useEffect, useRef, useState } from "react";
 
+interface Meteorite {
+  reclat?: string;
+  reclong?: string;
+  name?: string;
+  mass?: string;
+}
+
+interface Hazard {
+  latitude?: number;
+  lat?: number;
+  longitude?: number;
+  lng?: number;
+  short_name?: string;
+  name?: string;
+}
+
+interface Storm {
+  lat: number;
+  lng: number;
+  name: string;
+  description: string;
+}
+
+interface Earthquake {
+  lat: number;
+  lng: number;
+  magnitude: number;
+  place: string;
+  time: number;
+}
+
+interface Wildfire {
+  lat: number;
+  lng: number;
+  confidence: string;
+  brightness: number;
+  area: string;
+}
+
+interface GDACSDisaster {
+  title: string;
+  category: string;
+  lat: number;
+  lng: number;
+  description: string;
+}
+
+interface MapData {
+  meteorites: Meteorite[];
+  hazards: Hazard[];
+  storms: Storm[];
+  earthquakes: Earthquake[];
+  wildfires: Wildfire[];
+  gdacs: GDACSDisaster[];
+}
+
 export default function MapClient() {
-  const mapRef = useRef(null);
-  const containerRef = useRef(null);
+  const mapRef = useRef<any>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [fullscreen, setFullscreen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [activeFilters, setActiveFilters] = useState({
@@ -15,7 +71,7 @@ export default function MapClient() {
     wildfires: true,
     gdacs: true,
   });
-  const [data, setData] = useState({
+  const [data, setData] = useState<MapData>({
     meteorites: [],
     hazards: [],
     storms: [],
@@ -26,7 +82,7 @@ export default function MapClient() {
 
   useEffect(() => {
     import("leaflet").then((L) => {
-      delete L.default.Icon.Default.prototype._getIconUrl;
+      delete (L.default.Icon.Default.prototype as any)._getIconUrl;
       L.default.Icon.Default.mergeOptions({
         iconRetinaUrl:
           "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
@@ -80,14 +136,16 @@ export default function MapClient() {
       "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson",
     )
       .then((res) => res.json())
-      .then((earthquakeData) => {
-        const earthquakes = earthquakeData.features.map((quake) => ({
-          lat: quake.geometry.coordinates[1],
-          lng: quake.geometry.coordinates[0],
-          magnitude: quake.properties.mag,
-          place: quake.properties.place,
-          time: quake.properties.time,
-        }));
+      .then((earthquakeData: any) => {
+        const earthquakes: Earthquake[] = earthquakeData.features.map(
+          (quake: any) => ({
+            lat: quake.geometry.coordinates[1],
+            lng: quake.geometry.coordinates[0],
+            magnitude: quake.properties.mag,
+            place: quake.properties.place,
+            time: quake.properties.time,
+          }),
+        );
         setData((prev) => ({ ...prev, earthquakes }));
       })
       .catch(() => {});
@@ -95,7 +153,7 @@ export default function MapClient() {
     fetch("https://www.nhc.noaa.gov/xgtwo/two_atl_0d0.txt")
       .then((res) => res.text())
       .then((textData) => {
-        const storms = [];
+        const storms: Storm[] = [];
         const lines = textData.split("\n");
         lines.forEach((line, index) => {
           if (
@@ -107,8 +165,8 @@ export default function MapClient() {
               /(\d+\.\d+)([NS])\s+(\d+\.\d+)([EW])/,
             );
             if (coordMatch) {
-              let lat = parseFloat(coordMatch[1]);
-              let lng = parseFloat(coordMatch[3]);
+              let lat = parseFloat(coordMatch[1] || "0");
+              let lng = parseFloat(coordMatch[3] || "0");
               if (coordMatch[2] === "S") lat = -lat;
               if (coordMatch[4] === "W") lng = -lng;
               storms.push({
@@ -132,10 +190,10 @@ export default function MapClient() {
       .then((res) => res.text())
       .then((csvData) => {
         const lines = csvData.split("\n");
-        const wildfires = [];
+        const wildfires: Wildfire[] = [];
         for (let i = 1; i < Math.min(lines.length, 10); i++) {
           const line = lines[i];
-          if (line.trim()) {
+          if (line && line.trim()) {
             const [lat, lng, confidence, brightness, area] = line.split(",");
             if (
               lat &&
@@ -147,7 +205,7 @@ export default function MapClient() {
                 lat: parseFloat(lat),
                 lng: parseFloat(lng),
                 confidence: confidence || "Medium",
-                brightness: parseFloat(brightness) || 300,
+                brightness: parseFloat(brightness || "300"),
                 area: area || "Unknown Area",
               });
             }
@@ -170,14 +228,18 @@ export default function MapClient() {
       const text = await res.text();
       const xml = new DOMParser().parseFromString(text, "text/xml");
       const items = Array.from(xml.querySelectorAll("item"));
-      const disasters = items
+      const disasters: GDACSDisaster[] = items
         .map((item) => {
           const title =
             item.querySelector("title")?.textContent || "Unknown Disaster";
           const category =
             item.querySelector("category")?.textContent || "General";
-          const lat = parseFloat(item.querySelector("geo\\:lat")?.textContent);
-          const lon = parseFloat(item.querySelector("geo\\:long")?.textContent);
+          const lat = parseFloat(
+            item.querySelector("geo\\:lat")?.textContent || "0",
+          );
+          const lon = parseFloat(
+            item.querySelector("geo\\:long")?.textContent || "0",
+          );
           const description =
             item.querySelector("description")?.textContent || "";
           return {
@@ -202,7 +264,7 @@ export default function MapClient() {
       const map = mapRef.current;
       if (!map) return;
 
-      map.eachLayer((layer) => {
+      map.eachLayer((layer: any) => {
         if (
           layer instanceof L.default.CircleMarker ||
           layer instanceof L.default.Marker
@@ -317,7 +379,7 @@ export default function MapClient() {
 
       if (activeFilters.gdacs && data.gdacs.length > 0) {
         data.gdacs.forEach((disaster) => {
-          const getDisasterIcon = (category) => {
+          const getDisasterIcon = (category: string) => {
             if (
               category.toLowerCase().includes("cyclone") ||
               category.toLowerCase().includes("storm")
@@ -329,7 +391,7 @@ export default function MapClient() {
             return "⚠️";
           };
 
-          const getDisasterColor = (category) => {
+          const getDisasterColor = (category: string) => {
             if (
               category.toLowerCase().includes("cyclone") ||
               category.toLowerCase().includes("storm")
@@ -360,7 +422,7 @@ export default function MapClient() {
     });
   }, [activeFilters, data]);
 
-  const toggleFilter = (filterType) => {
+  const toggleFilter = (filterType: keyof typeof activeFilters) => {
     setActiveFilters((prev) => ({
       ...prev,
       [filterType]: !prev[filterType],
