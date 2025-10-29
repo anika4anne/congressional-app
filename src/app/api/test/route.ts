@@ -91,10 +91,6 @@ export async function GET() {
   const oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-  // Add some randomness to make data more dynamic
-  const randomHours = Math.floor(Math.random() * 24);
-  oneWeekAgo.setHours(oneWeekAgo.getHours() + randomHours);
-
   // Earthquakes
   try {
     const eqRes = await fetch(
@@ -103,14 +99,7 @@ export async function GET() {
     const eqData = (await eqRes.json()) as EarthquakeData;
     const earthquakes = eqData.features ?? [];
 
-    // Add some randomness to the count to make it more dynamic
-    const maxEarthquakes = Math.floor(Math.random() * 500) + 500; // Random between 500-1000
-    const sampledEarthquakes =
-      earthquakes.length > maxEarthquakes
-        ? earthquakes.sort(() => Math.random() - 0.5).slice(0, maxEarthquakes)
-        : earthquakes;
-
-    sampledEarthquakes.forEach((eq) => {
+    earthquakes.forEach((eq) => {
       const [lng, lat] = eq.geometry.coordinates;
       disasters.push({
         id: `eq-${eq.id}`,
@@ -180,10 +169,18 @@ export async function GET() {
               approachData.close_approach_date_full ?? new Date().toISOString(),
             location: "Near Earth (space)",
             coordinates: [
-              parseFloat(approachData.orbiting_body?.longitude ?? "0") ||
-                Math.random() * 360 - 180,
-              parseFloat(approachData.orbiting_body?.latitude ?? "0") ||
-                Math.random() * 180 - 90,
+              (() => {
+                const val = parseFloat(
+                  approachData.orbiting_body?.longitude ?? "",
+                );
+                return Number.isFinite(val) ? val : 0;
+              })(),
+              (() => {
+                const val = parseFloat(
+                  approachData.orbiting_body?.latitude ?? "",
+                );
+                return Number.isFinite(val) ? val : 0;
+              })(),
             ],
             intensity: parseFloat(
               neo.estimated_diameter?.kilometers?.estimated_diameter_max ?? "0",

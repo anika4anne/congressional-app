@@ -18,11 +18,7 @@ const handler = (req: NextRequest) =>
     router: appRouter,
     createContext: () => createContext(req),
     onError:
-      env.NODE_ENV === "development"
-        ? ({ path, error }) => {
-            // tRPC error: ${path ?? "<no-path>"}: ${error.message}
-          }
-        : undefined,
+      env.NODE_ENV === "development" ? ({ path, error }) => {} : undefined,
   });
 
 export { handler as GET, handler as POST };
