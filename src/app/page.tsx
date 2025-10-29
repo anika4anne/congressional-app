@@ -1,4 +1,5 @@
 import TopBar from "./_components/topbar";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -33,10 +34,13 @@ export default function Home() {
             <span className="font-semibold text-orange-300">action</span>.
           </p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <button className="flex items-center space-x-2 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 px-8 py-4 font-semibold text-white transition-all duration-300 hover:scale-105 hover:from-green-500 hover:to-emerald-500">
+            <Link
+              href="/map"
+              className="flex items-center space-x-2 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 px-8 py-4 font-semibold text-white transition-all duration-300 hover:scale-105 hover:from-green-500 hover:to-emerald-500"
+            >
               <span>View Interactive Map</span>
               <span>→</span>
-            </button>
+            </Link>
             <button className="rounded-lg border-2 border-white px-8 py-4 font-semibold text-white transition-all duration-300 hover:bg-white hover:text-gray-900">
               Explore Data
             </button>

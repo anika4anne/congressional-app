@@ -62,15 +62,16 @@ export default class IconClusterLayer<
         radius: props.sizeScale * Math.sqrt(2),
       });
       index.load(
-        // @ts-expect-error Supercluster expects proper GeoJSON feature
         (props.data as DataT[]).map((d) => ({
+          type: "Feature",
           geometry: {
+            type: "Point",
             coordinates: (props.getPosition as (d: DataT) => [number, number])(
               d,
             ),
           },
           properties: d,
-        })),
+        })) as unknown as PointFeature<DataT>[],
       );
       this.setState({ index });
     }

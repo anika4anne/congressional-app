@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -31,9 +32,11 @@ export default function TopBar({ className = "" }: { className?: string }) {
       )}
     >
       <nav className="flex items-center gap-4 rounded-full border border-white/10 bg-black/30 px-6 py-3 shadow-lg backdrop-blur-md">
-        <img
+        <Image
           src="/logo.png"
           alt="Environmental Crisis Tracker Logo"
+          width={48}
+          height={48}
           className="h-12 w-12 rounded-lg border border-white/20 shadow-lg transition-transform duration-200 hover:scale-105"
         />
         {links.map(({ label, href, icon }) => (

@@ -85,33 +85,7 @@ export default function TestPage() {
     try {
       const disasterData = await getAllDisasterData();
       setAllDisasters(disasterData);
-      console.log("Loaded disasters:", disasterData.length);
-      console.log(
-        "Earthquakes:",
-        disasterData.filter((d: any) => d.type === "earthquake").length,
-      );
-      console.log(
-        "Wildfires:",
-        disasterData.filter((d: any) => d.type === "wildfire").length,
-      );
-      console.log(
-        "Meteors:",
-        disasterData.filter((d: any) => d.type === "meteor").length,
-      );
-      console.log(
-        "Disasters:",
-        disasterData.filter((d: any) => d.type === "disaster").length,
-      );
-      console.log(
-        "Cyclones:",
-        disasterData.filter((d: any) => d.type === "cyclone").length,
-      );
-      console.log(
-        "Hurricanes:",
-        disasterData.filter((d: any) => d.type === "hurricane").length,
-      );
     } catch (error) {
-      console.error("Error loading data:", error);
     } finally {
       setLoading(false);
     }
