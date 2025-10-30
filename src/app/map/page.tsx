@@ -6,8 +6,8 @@ import { DeckGL } from "@deck.gl/react";
 import { MapView } from "@deck.gl/core";
 import { ScatterplotLayer } from "@deck.gl/layers";
 import type { PickingInfo, MapViewState } from "@deck.gl/core";
-import TopBar from "../_components/topbar";
 import Link from "next/link";
+import { type Disaster, disasterTypes, sources } from "../../constants";
 
 const MAP_VIEW = new MapView({ repeat: true });
 const INITIAL_VIEW_STATE: MapViewState = {
@@ -21,46 +21,16 @@ const INITIAL_VIEW_STATE: MapViewState = {
 const MAP_STYLE =
   "https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json";
 
-type CrisisData = {
-  coordinates: [longitude: number, latitude: number];
-  name: string;
-  type:
-    | "cyclone"
-    | "flood"
-    | "volcano"
-    | "earthquake"
-    | "wildfire"
-    | "meteor"
-    | "disaster"
-    | "hurricane";
-  description: string;
-  magnitude?: number;
-  intensity?: number;
-  title: string;
-};
-
-type Disaster = {
-  id: string;
-  type: string;
-  title: string;
-  date: string;
-  location: string;
-  magnitude?: number;
-  url?: string;
-  coordinates: [number, number];
-  description: string;
-};
-
 async function getAllDisasterData(): Promise<Disaster[]> {
   try {
-    const res = await fetch("/api/test");
+    const res = await fetch("/api/data");
     return (await res.json()) as Disaster[];
   } catch {
     return [];
   }
 }
 
-function renderTooltip(info: PickingInfo<CrisisData>) {
+function renderTooltip(info: PickingInfo<Disaster>) {
   const { object } = info;
   if (!object) return null;
 
@@ -68,8 +38,7 @@ function renderTooltip(info: PickingInfo<CrisisData>) {
     html: `
       <div class="bg-black/80 text-white p-3 rounded-lg shadow-lg border border-white/20">
         <h3 class="font-bold text-lg mb-2">${object.title}</h3>
-        <p class="text-sm text-gray-300 mb-1">${object.description}</p>
-        <p class="text-xs text-gray-400">Type: ${object.type}</p>
+        <p class="text-xs text-gray-400">Categories: ${object.categories.map((c) => c.title).join(", ")}</p>
         ${object.magnitude ? `<p class="text-xs text-gray-400">Magnitude: ${object.magnitude}</p>` : ""}
         ${object.intensity ? `<p class="text-xs text-gray-400">Intensity: ${object.intensity}</p>` : ""}
       </div>
@@ -85,15 +54,24 @@ function renderTooltip(info: PickingInfo<CrisisData>) {
 export default function MapPage() {
   const [layers, setLayers] = useState<ScatterplotLayer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
   const [webglSupported, setWebglSupported] = useState(true);
-  const [activeFilters, setActiveFilters] = useState({
+  const [activeFilters, setActiveFilters] = useState<
+    Record<(typeof disasterTypes)[number]["id"], boolean>
+  >({
+    drought: true,
+    dustHaze: true,
     earthquakes: true,
+    floods: true,
+    landslides: true,
+    manmade: true,
+    seaLakeIce: true,
+    severeStorms: true,
+    snow: true,
+    tempExtremes: true,
+    volcanoes: true,
+    waterColor: true,
     wildfires: true,
-    meteors: true,
-    disasters: true,
-    cyclones: true,
-    hurricanes: true,
   });
   const [allDisasters, setAllDisasters] = useState<Disaster[]>([]);
   const [selectedDisaster, setSelectedDisaster] = useState<
@@ -112,114 +90,52 @@ export default function MapPage() {
     }
   }, []);
 
+  console.log(allDisasters);
+
   const updateLayers = useCallback(
     (disasterData: Disaster[]) => {
       const newLayers = [];
-
-      if (activeFilters.earthquakes) {
-        const earthquakes = disasterData.filter((d) => d.type === "earthquake");
-        newLayers.push(
-          new ScatterplotLayer({
-            id: "earthquake-layer",
-            data: earthquakes,
-            getPosition: (d: Disaster) => d.coordinates,
-            getRadius: 30000,
-            getFillColor: [255, 0, 0],
-            pickable: true,
-            onClick: (info: { object?: Disaster }) =>
-              setSelectedDisaster(info.object),
-          }),
-        );
-      }
-
-      if (activeFilters.wildfires) {
-        const wildfires = disasterData.filter((d) => d.type === "wildfire");
-        newLayers.push(
-          new ScatterplotLayer({
-            id: "wildfire-layer",
-            data: wildfires,
-            getPosition: (d: Disaster) => d.coordinates,
-            getRadius: 25000,
-            getFillColor: [255, 165, 0],
-            pickable: true,
-            onClick: (info: { object?: Disaster }) =>
-              alert(`${info.object?.title} - ${info.object?.description}`),
-          }),
-        );
-      }
-
-      if (activeFilters.meteors) {
-        const meteors = disasterData.filter((d) => d.type === "meteor");
-        newLayers.push(
-          new ScatterplotLayer({
-            id: "meteor-layer",
-            data: meteors,
-            getPosition: (d: Disaster) => d.coordinates,
-            getRadius: 20000,
-            getFillColor: [255, 255, 0],
-            pickable: true,
-            onClick: (info: { object?: Disaster }) =>
-              alert(`${info.object?.title} - ${info.object?.description}`),
-          }),
-        );
-      }
-
-      if (activeFilters.disasters) {
-        const disasters = disasterData.filter((d) => d.type === "disaster");
-        newLayers.push(
-          new ScatterplotLayer({
-            id: "disaster-layer",
-            data: disasters,
-            getPosition: (d: Disaster) => d.coordinates,
-            getRadius: 35000,
-            getFillColor: [128, 0, 128],
-            pickable: true,
-            onClick: (info: { object?: Disaster }) =>
-              alert(`${info.object?.title} - ${info.object?.description}`),
-          }),
-        );
-      }
-
-      if (activeFilters.cyclones) {
-        const cyclones = disasterData.filter((d) => d.type === "cyclone");
-        newLayers.push(
-          new ScatterplotLayer({
-            id: "cyclone-layer",
-            data: cyclones,
-            getPosition: (d: Disaster) => d.coordinates,
-            getRadius: 30000,
-            getFillColor: [0, 0, 255],
-            pickable: true,
-            onClick: (info: { object?: Disaster }) =>
-              alert(`${info.object?.title} - ${info.object?.description}`),
-          }),
-        );
-      }
-
-      if (activeFilters.hurricanes) {
-        const hurricanes = disasterData.filter((d) => d.type === "hurricane");
-        newLayers.push(
-          new ScatterplotLayer({
-            id: "hurricane-layer",
-            data: hurricanes,
-            getPosition: (d: Disaster) => d.coordinates,
-            getRadius: 40000,
-            getFillColor: [255, 0, 255],
-            pickable: true,
-            onClick: (info: { object?: Disaster }) =>
-              alert(`${info.object?.title} - ${info.object?.description}`),
-          }),
-        );
-      }
-
+      newLayers.push(
+        new ScatterplotLayer({
+          id: "disaster-layer",
+          data: disasterData.filter((d) =>
+            d.categories.some((c) => activeFilters[c.id]),
+          ),
+          getPosition: (d: Disaster) => d.coordinates,
+          getRadius:
+            // (d: Disaster) =>
+            //   (d.magnitude ?? 0) *
+            //     ({
+            //       drought: 1,
+            //       dustHaze: 1,
+            //       earthquakes: 1,
+            //       floods: 1,
+            //       landslides: 1,
+            //       manmade: 1,
+            //       seaLakeIce: 10,
+            //       severeStorms: 1000,
+            //       snow: 1,
+            //       tempExtremes: 1,
+            //       volcanoes: 10,
+            //       waterColor: 1,
+            //       wildfires: 0.001,
+            //     }[d.categories[0]?.id ?? "drought"] ?? 1) +
+            30000,
+          getFillColor: (d: Disaster) =>
+            disasterTypes.find((t) => t.id === d.categories[0]?.id)?.color as [
+              number,
+              number,
+              number,
+            ],
+          pickable: true,
+          onClick: (info: { object?: Disaster }) =>
+            setSelectedDisaster(info.object),
+        }),
+      );
       setLayers(newLayers);
     },
     [activeFilters],
   );
-
-  const toggleFilter = (filterType: keyof typeof activeFilters) => {
-    setActiveFilters((prev) => ({ ...prev, [filterType]: !prev[filterType] }));
-  };
 
   useEffect(() => {
     try {
@@ -285,7 +201,7 @@ export default function MapPage() {
           views={MAP_VIEW}
           initialViewState={INITIAL_VIEW_STATE}
           controller={{ dragRotate: false }}
-          onClick={({ object }: PickingInfo<CrisisData>) => {
+          onClick={({ object }: PickingInfo<Disaster>) => {
             // if (object) {
             //   setSelectedDisaster(object as Disaster);
             // }
@@ -336,81 +252,67 @@ export default function MapPage() {
           </h3>
           <div className="mb-4 rounded bg-black/20 p-2 text-sm text-white/80">
             <div>Total Disasters: {allDisasters.length}</div>
-            <div>
-              Earthquakes:{" "}
-              {allDisasters.filter((d) => d.type === "earthquake").length}
-            </div>
-            <div>
-              Wildfires:{" "}
-              {allDisasters.filter((d) => d.type === "wildfire").length}
-            </div>
-            <div>
-              Meteors: {allDisasters.filter((d) => d.type === "meteor").length}
-            </div>
           </div>
           <div className="space-y-3">
-            {[
-              {
-                key: "earthquakes",
-                emoji: "🌋",
-                label: "Earthquakes",
-                color: "red",
-              },
-              {
-                key: "wildfires",
-                emoji: "🔥",
-                label: "Wildfires",
-                color: "orange",
-              },
-              {
-                key: "meteors",
-                emoji: "☄️",
-                label: "Meteors",
-                color: "yellow",
-              },
-              {
-                key: "disasters",
-                emoji: "⚠️",
-                label: "Disasters",
-                color: "purple",
-              },
-              {
-                key: "cyclones",
-                emoji: "🌪️",
-                label: "Cyclones",
-                color: "blue",
-              },
-              {
-                key: "hurricanes",
-                emoji: "🌀",
-                label: "Hurricanes",
-                color: "pink",
-              },
-            ].map(({ key, emoji, label, color }) => (
-              <label
-                key={key}
-                className="flex cursor-pointer items-center gap-3 text-sm text-white transition-all hover:scale-105"
-              >
-                <input
-                  type="checkbox"
-                  checked={activeFilters[key as keyof typeof activeFilters]}
-                  onChange={() =>
-                    toggleFilter(key as keyof typeof activeFilters)
-                  }
-                  className={`h-4 w-4 rounded border-2 border-white/50 bg-white/20 text-${color}-500 focus:ring-2 focus:ring-${color}-400 focus:ring-offset-2 focus:ring-offset-transparent`}
-                />
-                <span className="text-lg">{emoji}</span>
-                <span className="font-medium">{label}</span>
-                <span
-                  className={`ml-auto rounded-full bg-${color}-500/20 px-2 py-1 text-xs font-bold text-${color}-300`}
+            {disasterTypes
+              .sort(
+                (a, b) =>
+                  allDisasters.filter((d) =>
+                    d.categories.some((c) => c.id === b.id),
+                  ).length -
+                  allDisasters.filter((d) =>
+                    d.categories.some((c) => c.id === a.id),
+                  ).length,
+              )
+              .slice(0, 4)
+              .map(({ id, emoji, title }) => (
+                <label
+                  key={id}
+                  className="flex cursor-pointer items-center gap-3 text-sm text-white transition-all hover:scale-105"
                 >
-                  {
-                    allDisasters.filter((d) => d.type === key.slice(0, -1))
-                      .length
-                  }
-                </span>
-              </label>
-            ))}
+                  <input
+                    type="checkbox"
+                    checked={activeFilters[id]}
+                    onChange={() =>
+                      setActiveFilters((prev) => ({ ...prev, [id]: !prev[id] }))
+                    }
+                    className={`h-4 w-4 rounded border-2 border-white/50 bg-white/20 text-white focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent`}
+                  />
+                  <span className="text-lg">{emoji}</span>
+                  <span className="font-medium">{title}</span>
+                  <span
+                    className={`ml-auto rounded-full bg-white/20 px-2 py-1 text-xs font-bold text-white`}
+                  >
+                    {
+                      allDisasters.filter((d) =>
+                        d.categories.some((c) => c.id === id),
+                      ).length
+                    }
+                  </span>
+                </label>
+              ))}
+            <button
+              onClick={() => setShowFilters(false)}
+              className="w-full rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-lg transition-all hover:scale-105 hover:from-green-700 hover:to-emerald-700 hover:shadow-xl"
+            >
+              <span className="">Show All</span>
+              <span className="ml-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="inline-block h-4 w-4 text-white opacity-60 transition-opacity group-hover:opacity-80"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </span>
+            </button>
           </div>
           <div className="mt-6 space-y-2 border-t border-white/20 pt-4">
             <button
@@ -458,24 +360,34 @@ export default function MapPage() {
           <div className="mt-4 space-y-4">
             <p className="text-gray-300">
               <span className="font-semibold text-white">Type:</span>{" "}
-              {selectedDisaster.type}
+              {selectedDisaster.categories.map((c) => c.title).join(", ")}
             </p>
 
-            <p className="text-gray-300">
+            {/* <p className="text-gray-300">
               <span className="font-semibold text-white">Description:</span>{" "}
               {selectedDisaster.description}
+            </p> */}
+            <p className="text-gray-300">
+              <span className="font-semibold text-white">Categories:</span>{" "}
+              {selectedDisaster.categories.map((c) => c.title).join(", ")}
             </p>
             <p className="text-gray-300">
-              <span className="font-semibold text-white">Type:</span>{" "}
-              {selectedDisaster.type}
+              <span className="font-semibold text-white">
+                Category Description:
+              </span>{" "}
+              {
+                disasterTypes.find(
+                  (t) => t.id === selectedDisaster.categories[0]?.id,
+                )?.description
+              }
             </p>
             <p className="text-gray-300">
               <span className="font-semibold text-white">Magnitude:</span>{" "}
               {selectedDisaster.magnitude}
             </p>
             <p className="text-gray-300">
-              <span className="font-semibold text-white">Date:</span>{" "}
-              {selectedDisaster.date}
+              <span className="font-semibold text-white">Date Began:</span>{" "}
+              {new Date(selectedDisaster.date).toLocaleDateString()}
             </p>
             {/* <p className="text-gray-300">
               <span className="font-semibold text-white">Location:</span>{" "}
@@ -487,11 +399,14 @@ export default function MapPage() {
               {selectedDisaster.coordinates[1].toFixed(4)}
             </p>
 
-            {selectedDisaster.url && (
-              <Link href={selectedDisaster.url} className="text-blue-500">
-                Learn More
-              </Link>
-            )}
+            <p className="text-gray-300">
+              <span className="font-semibold text-white">Sources: </span>
+              {selectedDisaster.sources.map((s) => (
+                <Link key={s.id} href={s.url} className="text-blue-500">
+                  {sources.find((source) => source.id === s.id)?.title}
+                </Link>
+              ))}
+            </p>
           </div>
         </div>
       )}
