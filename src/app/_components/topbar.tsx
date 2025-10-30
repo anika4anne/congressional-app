@@ -3,22 +3,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faHome,
-  faMap,
-  faChartBar,
-  faInfoCircle,
-  faPlay,
-} from "@fortawesome/free-solid-svg-icons";
+import { faHome, faMap, faPlay } from "@fortawesome/free-solid-svg-icons";
 
 import clsx from "clsx";
 
 const links = [
   { label: "Home", href: "/", icon: faHome },
   { label: "Map", href: "/map", icon: faMap },
-  { label: "Data", href: "/data", icon: faChartBar },
   { label: "Demo", href: "/demo", icon: faPlay },
-  { label: "About Us", href: "/about-us", icon: faInfoCircle },
 ];
 
 export default function TopBar({ className = "" }: { className?: string }) {

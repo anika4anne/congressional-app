@@ -18,12 +18,9 @@ export default function Home() {
         <div className="mx-auto max-w-4xl px-4 text-center">
           <div className="mb-8 flex flex-col items-center space-y-6">
             <div className="space-y-4">
-              <h1 className="text-6xl font-extrabold tracking-tight text-white sm:text-7xl md:text-8xl">
-                Environmental
-              </h1>
               <h1 className="text-6xl font-extrabold tracking-tight sm:text-7xl md:text-8xl">
-                <span className="text-green-800">Crisis</span>{" "}
-                <span className="text-white">Tracker</span>
+                <span className="text-white">Planet</span>
+                <span className="text-green-800">Alert</span>
               </h1>
             </div>
           </div>

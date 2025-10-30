@@ -6,7 +6,7 @@ import { Geist } from "next/font/google";
 import { TRPCReactProvider } from "~/trpc/react";
 
 export const metadata: Metadata = {
-  title: "Environmental Crisis Tracker",
+  title: "Planet Alert",
   description: "Congressional App ",
   icons: [{ rel: "icon", url: "/logo.png" }],
 };
