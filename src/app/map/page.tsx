@@ -102,25 +102,7 @@ export default function MapPage() {
             d.categories.some((c) => activeFilters[c.id]),
           ),
           getPosition: (d: Disaster) => d.coordinates,
-          getRadius:
-            // (d: Disaster) =>
-            //   (d.magnitude ?? 0) *
-            //     ({
-            //       drought: 1,
-            //       dustHaze: 1,
-            //       earthquakes: 1,
-            //       floods: 1,
-            //       landslides: 1,
-            //       manmade: 1,
-            //       seaLakeIce: 10,
-            //       severeStorms: 1000,
-            //       snow: 1,
-            //       tempExtremes: 1,
-            //       volcanoes: 10,
-            //       waterColor: 1,
-            //       wildfires: 0.001,
-            //     }[d.categories[0]?.id ?? "drought"] ?? 1) +
-            30000,
+          getRadius: 30000,
           getFillColor: (d: Disaster) =>
             disasterTypes.find((t) => t.id === d.categories[0]?.id)?.color as [
               number,

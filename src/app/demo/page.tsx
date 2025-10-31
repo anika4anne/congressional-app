@@ -30,27 +30,9 @@ export default function DemoPage() {
           <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black/50 shadow-2xl">
             {/* Video embed placeholder - ready for iframe or video tag */}
             <div className="flex h-full items-center justify-center">
-              <div className="text-center text-white/60">
-                <svg
-                  className="mx-auto h-16 w-16"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
+              <video className="h-full w-full" controls>
+                <source src="/demo.mp4" type="video/mp4" />
+              </video>
             </div>
             {/* 
               Replace the placeholder div above with your video embed code, for example:
